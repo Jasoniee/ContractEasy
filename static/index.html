@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractEasy</title>
+    <!-- 引入Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 自定义CSS -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        #uploadForm {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        #results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        #chatSection {
+            margin-top: 30px;
+        }
+        #chatMessages {
+            height: 500px;
+            overflow-y: scroll;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .chat-message {
+            max-width: 80%;
+        }
+        .user-message {
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+        }
+        .bot-message {
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+        }
+        .chat-input {
+            border-radius: 0 10px 10px 0;
+        }
+        .chat-input-group {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .chat-btn {
+            border-radius: 10px 0 0 10px;
+        }
+        /* Analysis styles */
+        .analysis-summary {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #343a40;
+            margin-bottom: 20px;
+        }
+        .analysis-item {
+            margin-bottom: 20px;
+        }
+        .analysis-item h4 {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        .analysis-item p {
+            font-size: 1rem;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .analysis-item ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .analysis-item ul li {
+            font-size: 1rem;
+            color: #495057;
+        }
+        .analysis-item ul li strong {
+            font-weight: bold;
+            color: #343a40;
+        }
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #343a40;
+            margin-top: 30px;
+        }
+        .header-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="header-title text-center">ContractEasy</h1>
+        <form id="uploadForm">
+            <div class="mb-3">
+                <label for="contractFile" class="form-label">Please choose your file</label>
+                <input class="form-control" type="file" id="contractFile" name="contractFile" accept=".pdf">
+            </div>
+            <button type="button" id="uploadButton" class="btn btn-success w-100">Upload</button>
+        </form>
+        <div id="results"></div>
+        
+        <!-- Chat Interface -->
+        <div id="chatSection" style="display: none;">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    Chat with ContractEasy Bot
+                </div>
+                <div class="card-body" id="chatMessages">
+                    <!-- Messages will be appended here -->
+                </div>
+                <div class="card-footer">
+                    <form id="chatForm">
+                        <div class="input-group chat-input-group">
+                            <input type="text" class="form-control chat-input" id="userMessage" placeholder="Type your message...">
+                            <button type="submit" class="btn btn-primary chat-btn">Send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Event listener for the upload button
+        document.getElementById('uploadButton').addEventListener('click', function() {
+            var fileInput = document.getElementById('contractFile');
+            var file = fileInput.files[0];
+            if (!file) {
+                alert("Please choose a file!");
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/analyze-contract', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                var summary = data.summary.replace(/\n+/g, '\n');
+                var formattedSummary = `
+                    <div class="analysis-summary">Summary of Risks and Weaknesses in the Contract</div>
+                    ${summary.replace(/\n\n/g, '</div><div class="analysis-item"><h4>').replace(/\n/g, '</h4><p>').replace(/- \*\*Risk\*\*:/g, '</p><ul><li><strong>Risk</strong>:').replace(/- \*\*Mitigation\*\*:/g, '</li><li><strong>Mitigation</strong>:').replace(/\*\*/g, '').replace(/<\/p><ul>/g, '</p><ul>').replace(/<\/li><p>/g, '</li></ul></div><div class="analysis-item"><p>')}
+                `;
+                document.getElementById('results').innerHTML = `<div class="analysis-item">${formattedSummary}</div>`;
+
+                // Show the chat interface after contract analysis is complete
+                document.getElementById('chatSection').style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // Event listener for the chat form submission
+        document.getElementById('chatForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent page refresh
+
+            const userMessage = document.getElementById('userMessage').value.trim();
+            if (userMessage === '') {
+                alert("Message cannot be empty!");
+                return;
+            }
+
+            // Append user's message to the chat immediately
+            const userMessageElement = `
+                <div class="d-flex justify-content-end mb-3">
+                    <div class="bg-light rounded p-2 chat-message user-message">
+                        ${userMessage}
+                    </div>
+                </div>
+            `;
+            document.getElementById('chatMessages').insertAdjacentHTML('beforeend', userMessageElement);
+
+            // Scroll to the bottom of the chat
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+
+            // Prepare JSON data instead of FormData
+            const jsonData = {
+                session_id: 'unique_session_id', // Replace with actual session ID logic
+                question: userMessage
+            };
+
+            // Clear input field immediately
+            document.getElementById('userMessage').value = '';
+
+            // Send JSON data with appropriate Content-Type header
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Format the bot's response to remove unnecessary formatting
+                let botAnswer = data.answer.replace(/\*\*/g, ''); // Remove **
+
+                // Append bot's response to the chat
+                const botMessageElement = `
+                    <div class="d-flex justify-content-start mb-3">
+                        <div class="bg-secondary text-white rounded p-2 chat-message bot-message">
+                            ${botAnswer}
+                        </div>
+                    </div>
+                `;
+                document.getElementById('chatMessages').insertAdjacentHTML('beforeend', botMessageElement);
+
+                // Ensure the scroll position is at the bottom after appending messages
+                document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
